@@ -1,414 +1,178 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>বুক-চেস্ট লক — কোড দিয়ে লাভ খোলা</title>
-  <style>
-    * { box-sizing: border-box; margin:0; padding:0; }
-    html,body { height:100%; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>গোপন প্রবেশদ্বার</title>
+    <style>
+        /* বেসিক স্টাইল (আগের মতোই) */
+        body {
+            font-family: 'Segoe Script', 'Times New Roman', serif;
+            background-color: #ffe0e6;
+            background-image: linear-gradient(135deg, #ffe0e6 0%, #ffc3d4 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #6a0531;
+            position: relative;
+            overflow: hidden;
+            perspective: 1000px;
+        }
 
-    body{
-      font-family: 'Noto Sans Bengali', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      background: radial-gradient(circle at 10% 10%, rgba(255,240,245,0.12), transparent 10%),
-                  linear-gradient(180deg,#0b1020 0%, #3b183a 50%, #7b3b68 100%);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      overflow:hidden;
-      padding:24px;
-    }
+        /* --- অ্যানিমেশন ইফেক্ট: ফুল ও হার্ট ঝরে পড়া --- */
+        .particles {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 0;
+        }
+        .particles::before {
+            content: "💖 🌸 🌹 ✨"; position: absolute; top: -10vh; left: 0; width: 100%; height: 100%; animation: fall 20s linear infinite; font-size: 20px; opacity: 0.8; white-space: pre-wrap; line-height: 60px;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-50vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.8; }
+            100% { transform: translateY(150vh) rotate(360deg); opacity: 0.2; }
+        }
 
-    /* subtle stars/hearts */
-    .background-stars {
-      position: absolute; inset:0;
-      background-image: radial-gradient(#fff 1px, transparent 1px);
-      background-size: 6px 6px;
-      opacity:0.06;
-      mix-blend-mode: screen;
-      pointer-events:none;
-    }
+        /* --- কাস্টম অ্যালার্ট স্টাইল (মাঝখানে নতুন সংযোজন) --- */
+        #custom-alert {
+            position: fixed;
+            top: 50%; /* মাঝখানে */
+            left: 50%; /* মাঝখানে */
+            transform: translate(-50%, -50%) scale(0.8); /* কেন্দ্রে আনা ও শুরুর আকার */
+            background-color: rgba(255, 102, 153, 0.98); /* গোলাপী অ্যালার্ট */
+            color: white;
+            padding: 25px 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(209, 31, 98, 0.6);
+            font-size: 1.3em;
+            font-weight: bold;
+            text-align: center;
+            z-index: 100;
+            opacity: 0;
+            border: 3px solid white;
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        .show-alert {
+            opacity: 1 !important;
+            /* হার্টের মতো স্পন্দিত হওয়ার অ্যানিমেশন শুরু */
+            animation: heartBeat 0.5s infinite alternate !important; 
+            transform: translate(-50%, -50%) scale(1) !important;
+        }
+        
+        @keyframes heartBeat {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            100% { transform: translate(-50%, -50%) scale(1.05); } /* হালকা বড় হওয়া */
+        }
 
-    /* stage */
-    .stage {
-      position: relative;
-      width: 380px;
-      height: 540px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:5;
-      perspective:1200px;
-    }
-
-    /* avatar/chest container */
-    .chest-wrap {
-      width: 300px;
-      height: 420px;
-      position: relative;
-      transform-style: preserve-3d;
-    }
-
-    /* back panel (revealed after open) */
-    .back-panel {
-      position:absolute;
-      width:100%;
-      height:100%;
-      border-radius:20px;
-      top:0; left:0;
-      background: linear-gradient(180deg,#ffdfe9, rgba(255,255,255,0.02) 40%);
-      box-shadow: inset 0 8px 30px rgba(255,255,255,0.02);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      opacity:0;
-      transition: opacity .9s ease .6s;
-      pointer-events:none;
-    }
-
-    /* avatar (looks like a boy/chest) */
-    .avatar {
-      position:absolute;
-      width:220px;
-      height:340px;
-      left:50%; top:50%;
-      transform: translate(-50%,-50%);
-      display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      gap:0;
-    }
-
-    /* head */
-    .head {
-      width:96px;
-      height:96px;
-      background: linear-gradient(180deg,#ffd8c9,#ffbfa3);
-      border-radius:50%;
-      margin-top:8px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.45), inset 0 6px 12px rgba(255,255,255,0.15);
-      position:relative;
-      z-index:6;
-      border: 2px solid rgba(0,0,0,0.08);
-    }
-    .hair {
-      position:absolute;
-      top:4px; left:0; right:0;
-      height:34px;
-      background: linear-gradient(180deg,#3a2030,#2b1324);
-      border-top-left-radius:50px;
-      border-top-right-radius:50px;
-      border-bottom-left-radius:28px;
-      border-bottom-right-radius:28px;
-    }
-
-    /* chest / torso */
-    .torso {
-      width:180px;
-      height:220px;
-      background: linear-gradient(180deg,#6b3b66,#562b4a);
-      border-radius:18px;
-      margin-top:10px;
-      position:relative;
-      z-index:5;
-      box-shadow: 0 40px 80px rgba(0,0,0,0.6), inset 0 6px 18px rgba(255,255,255,0.03);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      transform-origin: top center;
-      transition: transform 1s cubic-bezier(.2,.9,.2,1);
-    }
-
-    /* small shirt detail */
-    .shirt {
-      position:absolute;
-      top:24px;
-      width:120px;
-      height:60px;
-      background: linear-gradient(180deg,#ffb7d6 0%, #ff8fb1 100%);
-      border-radius:12px;
-      box-shadow: inset 0 4px 6px rgba(0,0,0,0.08);
-      z-index:8;
-      transform: translateZ(40px);
-    }
-
-    /* a small lock panel (center) */
-    .lock-panel {
-      position:relative;
-      z-index:9;
-      width:140px;
-      height:110px;
-      border-radius:12px;
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(4px);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex-direction:column;
-      padding:14px;
-    }
-
-    .code-input {
-      width:110px;
-      padding:10px 12px;
-      border-radius:8px;
-      border:none;
-      outline:none;
-      font-size:18px;
-      text-align:center;
-      letter-spacing:6px;
-      background: rgba(255,255,255,0.06);
-      color:#fff;
-    }
-    .btn {
-      margin-top:10px;
-      padding:8px 12px;
-      border-radius:8px;
-      border:none;
-      cursor:pointer;
-      background: linear-gradient(180deg,#ffd7ec,#ff9ac4);
-      color:#3b0120;
-      font-weight:700;
-    }
-
-    .msg { margin-top:8px; font-size:13px; color:rgba(255,255,255,0.85); min-height:18px; text-align:center; }
-
-    /* Heart that appears on unlock (centered, above chest) */
-    .heart-wrap {
-      position:absolute;
-      width:160px;
-      height:140px;
-      left:50%;
-      top:28%;
-      transform: translateX(-50%) translateY(-10px) scale(0.6);
-      z-index:7;
-      pointer-events:none;
-      opacity:0;
-      transition: opacity .45s ease, transform .6s cubic-bezier(.2,.9,.2,1);
-    }
-
-    .heart {
-      position:absolute;
-      left:50%;
-      top:50%;
-      transform: translate(-50%,-50%) rotate(45deg);
-      width:64px;
-      height:64px;
-    }
-    .heart:before, .heart:after {
-      content:"";
-      position:absolute;
-      width:64px;
-      height:64px;
-      background: linear-gradient(135deg,#ff5f9e,#ff9ac4);
-      border-radius:50%;
-      top: -32px;
-      left: 0;
-    }
-    .heart:after {
-      left:32px;
-      top:0;
-    }
-
-    /* Two halves for split effect */
-    .heart-left, .heart-right {
-      position:absolute;
-      width:80px;
-      height:80px;
-      left:50%;
-      top:50%;
-      transform-origin: center center;
-      transform: translate(-50%,-50%) rotate(45deg);
-      opacity:0;
-      transition: transform 0.9s cubic-bezier(.12,.9,.2,1), opacity .3s ease;
-      z-index:9;
-      pointer-events:none;
-    }
-    .heart-left .half, .heart-right .half {
-      width:80px; height:80px;
-      background: linear-gradient(135deg,#ff5f9e,#ff9ac4);
-      position:absolute;
-      border-radius:40px 0 40px 40px;
-    }
-    .heart-right .half {
-      border-radius:0 40px 40px 40px;
-      left:0;
-    }
-
-    /* when active (after correct code) show heart and then split */
-    .heart-wrap.show { opacity:1; transform: translateX(-50%) translateY(-40px) scale(1); }
-
-    .heart-wrap.split .heart { opacity:0; transform: translate(-50%,-50%) rotate(45deg) scale(.4); transition: opacity .4s ease, transform .6s ease; }
-    .heart-wrap.split .heart-left { opacity:1; transform: translate(-140%,-50%) rotate(-10deg); }
-    .heart-wrap.split .heart-right { opacity:1; transform: translate(40%,-50%) rotate(10deg); }
-
-    /* after split, chest opens (torso lifts) */
-    .torso.open {
-      transform: translateY(-12px) rotateX(16deg);
-      transition: transform 1s cubic-bezier(.15,.9,.15,1);
-    }
-
-    .back-panel.show { opacity:1; }
-
-    /* responsive */
-    @media (max-width:420px) {
-      .stage { transform: scale(.9); }
-      .chest-wrap { width:260px; height:380px; }
-    }
-  </style>
+        /* --- প্রবেশদ্বার স্টাইল (প্রথম স্ক্রিন) --- */
+        #code-entry {
+            text-align: center; background: rgba(255, 255, 255, 0.95); padding: 50px 70px; border-radius: 25px; box-shadow: 0 15px 50px rgba(209, 31, 98, 0.4); border: 5px double #ff6699; z-index: 2; max-width: 350px; animation: pulse 2s infinite alternate;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 15px 50px rgba(209, 31, 98, 0.4); }
+            100% { transform: scale(1.03); box-shadow: 0 15px 60px rgba(209, 31, 98, 0.6); }
+        }
+        #code-entry h3 { color: #d11f62; font-size: 2.2em; margin-bottom: 25px; text-shadow: 1px 1px #fff; }
+        #secret-code { padding: 15px; width: 180px; text-align: center; font-size: 20px; letter-spacing: 5px; border: 3px solid #ff99aa; border-radius: 30px; margin-bottom: 25px; }
+        #code-button { padding: 12px 30px; background-color: #d11f62; color: white; border: none; border-radius: 30px; font-size: 1.2em; cursor: pointer; transition: all 0.3s; font-weight: bold; }
+        #message { display: none; }
+        
+        /* --- লগইন কন্টেইনার স্টাইল (দ্বিতীয় স্ক্রিন) --- */
+        #login-screen {
+            display: none; width: 100%; height: 100%; justify-content: center; align-items: center; position: absolute; top: 0; left: 0; transform-style: preserve-3d; transform-origin: left center; animation: openDoor 1.5s ease-out forwards; opacity: 0;
+        }
+        @keyframes openDoor {
+            0% { transform: rotateY(-90deg); opacity: 0; }
+            70% { transform: rotateY(5deg); opacity: 1; }
+            100% { transform: rotateY(0deg); opacity: 1; }
+        }
+        
+        /* হার্ট শেপ এবং ভেতরের কন্টেন্টের স্টাইল (সংক্ষিপ্ত করা হলো) */
+        .heart-wrapper { position: relative; width: 320px; height: 280px; z-index: 1; display: flex; justify-content: center; align-items: center; transform: translateY(15px); }
+        .login-container.heart-shape { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.95); border: 3px solid #ff6699; box-shadow: 0 10px 40px rgba(106, 5, 49, 0.4); backdrop-filter: blur(2px); transform: rotate(-45deg); border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .login-content { transform: rotate(45deg); width: 80%; text-align: center; box-sizing: border-box; padding: 10px; }
+        h2 { margin-bottom: 25px; color: #d11f62; font-size: 1.8em; text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7); }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #8c0f48; font-size: 1em; }
+        .input-group input[type="text"], .input-group input[type="password"] { width: 90%; padding: 10px; border: 2px solid #ff99aa; border-radius: 20px; font-size: 14px; background-color: #fffafa; }
+        .login-btn { width: 100%; padding: 12px; background-color: #d11f62; color: white; border: none; border-radius: 20px; font-size: 1.1em; cursor: pointer; margin-top: 15px; }
+        .heart-icon { color: #d11f62; font-size: 1.5em; margin: 0 5px; }
+    </style>
 </head>
 <body>
-  <div class="background-stars" aria-hidden="true"></div>
 
-  <div class="stage" role="main" aria-label="বুক চেস্ট লগইন">
-    <div class="chest-wrap" id="chestWrap">
+    <div class="particles"></div>
 
-      <!-- back content (revealed after opening) -->
-      <div class="back-panel" id="backPanel" aria-hidden="true">
-        <div style="text-align:center; color:#5b1a3a; font-weight:700; font-size:20px;">
-          স্বাগতম — তোমার কোডটি সঠিক। <br>হৃদয় দুটি হয়ে গেছে মুক্ত ✨
-        </div>
-      </div>
+    <div id="custom-alert"></div>
 
-      <!-- heart elements (appear on unlock) -->
-      <div class="heart-wrap" id="heartWrap" aria-hidden="true">
-        <div class="heart" id="heartSimple" aria-hidden="true"></div>
-
-        <div class="heart-left" id="heartLeft" aria-hidden="true">
-          <div class="half"></div>
-        </div>
-        <div class="heart-right" id="heartRight" aria-hidden="true">
-          <div class="half"></div>
-        </div>
-      </div>
-
-      <!-- avatar: head + torso -->
-      <div class="avatar" aria-hidden="false">
-        <div class="head" role="img" aria-label="অ্যাভাটার">
-          <div class="hair"></div>
-        </div>
-
-        <div class="torso" id="torso">
-          <div class="shirt"></div>
-
-          <div class="lock-panel" id="lockPanel" role="form" aria-labelledby="lockTitle">
-            <div id="lockTitle" style="font-weight:700; color:#ffeef8; margin-bottom:6px;">মন খোলার চেস্ট</div>
-            <input id="code" class="code-input" inputmode="numeric" maxlength="6" placeholder="●●●●" aria-label="চেস্ট কোড" />
-            <button id="btn" class="btn" aria-label="জমা দিন">খোল</button>
-            <div class="msg" id="msgArea" aria-live="polite"></div>
-          </div>
-
-        </div>
-      </div>
-
+    <div id="code-entry">
+        <h3><span class="heart-icon">💌</span> তোমার গোপন আমন্ত্রন</h3>
+        <input type="password" id="secret-code" placeholder="কোড দিন" maxlength="4">
+        <button id="code-button" onclick="checkCode()">হৃদয় খুলুন</button>
+        <p id="message"></p>
     </div>
-  </div>
 
-  <script>
-    // Elements
-    const CORRECT = '1234';
-    const codeInput = document.getElementById('code');
-    const btn = document.getElementById('btn');
-    const heartWrap = document.getElementById('heartWrap');
-    const heartSimple = document.getElementById('heartSimple');
-    const heartLeft = document.getElementById('heartLeft');
-    const heartRight = document.getElementById('heartRight');
-    const torso = document.getElementById('torso');
-    const backPanel = document.getElementById('backPanel');
-    const msgArea = document.getElementById('msgArea');
+    <div id="login-screen">
+        <div class="heart-wrapper">
+            <div class="login-container heart-shape">
+                <div class="login-content">
+                    <h2><span class="heart-icon">💖</span> চিরন্তন ভালোবাসায় <span class="heart-icon">💖</span></h2>
+                    
+                    <form action="#" method="POST">
+                        <div class="input-group">
+                            <label for="username">মনের মানুষ</label>
+                            <input type="text" id="username" name="username" placeholder="তার নাম..." required>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="password">ভালোবাসার স্মৃতি</label>
+                            <input type="password" id="password" name="password" placeholder="আমাদের গোপন দিন..." required>
+                        </div>
+                        
+                        <button type="submit" class="login-btn">
+                            <span class="heart-icon" style="font-size: 1em; color: white;">💞</span> হৃদয় মেলে ধরো
+                        </button>
+                    </form>
+                    <p style="margin-top: 15px; font-size: 0.8em; color: #8c0f48; font-style: italic;">"প্রতিটি ধুকপুক তোমার জন্য।"</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    function setMsg(text, ok=false){
-      msgArea.textContent = text;
-      msgArea.style.color = ok ? '#ffeef8' : 'rgba(255,255,255,0.85)';
-    }
+    <script>
+        const CORRECT_CODE = "1234";
 
-    function showHeartThenSplit(){
-      // show heart
-      heartWrap.classList.add('show');
-      heartWrap.setAttribute('aria-hidden','false');
-      setMsg('লাভ দেখছে...','true');
-      // after small delay, split
-      setTimeout(()=> {
-        heartWrap.classList.add('split');
-        // open torso
-        torso.classList.add('open');
-        backPanel.classList.add('show');
-        backPanel.setAttribute('aria-hidden','false');
-        setMsg('দরজা খুলল — স্বাগতম!', true);
+        function showAlert(message) {
+            const alertElement = document.getElementById('custom-alert');
+            // অ্যালার্ট মেসেজে বড় করে একটি ভাঙা হার্টের ইমোজি যোগ করা হলো
+            alertElement.innerHTML = `<span style="font-size: 2em; display: block; margin-bottom: 10px;">💔</span> ${message}`;
+            alertElement.classList.add('show-alert');
 
-        // small floating mini hearts burst for effect
-        miniBurst();
-      }, 800);
-    }
+            // 3 সেকেন্ড পর অ্যালার্টটি লুকিয়ে ফেলা
+            setTimeout(() => {
+                // অ্যানিমেশন বন্ধ করে মসৃণভাবে অদৃশ্য হওয়া
+                alertElement.classList.remove('show-alert');
+            }, 3000);
+        }
 
-    function miniBurst(){
-      for(let i=0;i<12;i++){
-        const b = document.createElement('div');
-        b.style.position = 'absolute';
-        b.style.width = b.style.height = (6 + Math.random()*14)+'px';
-        b.style.left = (40 + Math.random()*20) + '%';
-        b.style.top = (40 + Math.random()*20) + '%';
-        b.style.background = 'radial-gradient(circle at 30% 30%, #fff 0%, #ff8fb1 20%, #ff5f9e 60%)';
-        b.style.borderRadius = '50%';
-        b.style.opacity = '0.95';
-        b.style.transform = 'translate(-50%,-50%)';
-        b.style.zIndex = 30;
-        b.style.pointerEvents = 'none';
-        document.body.appendChild(b);
-        const dx = (Math.random()*160 - 80);
-        const dy = - (60 + Math.random()*140);
-        b.animate([
-          { transform: 'translate(0,0) scale(1)', opacity:1 },
-          { transform: `translate(${dx}px, ${dy}px) scale(.4)`, opacity:0 }
-        ], { duration: 900 + Math.random()*700, easing: 'cubic-bezier(.2,.9,.2,1)' });
-        setTimeout(()=> b.remove(), 2000);
-      }
-    }
+        function checkCode() {
+            const enteredCode = document.getElementById('secret-code').value;
+            const codeEntryScreen = document.getElementById('code-entry');
+            const loginScreen = document.getElementById('login-screen');
 
-    function tryUnlock(){
-      const val = codeInput.value.trim();
-      if(val === CORRECT){
-        // prevent repeated triggers
-        if(heartWrap.classList.contains('show')) return;
-        showHeartThenSplit();
-      } else {
-        // shake input
-        codeInput.animate([
-          { transform: 'translateX(0)' },
-          { transform: 'translateX(-8px)' },
-          { transform: 'translateX(8px)' },
-          { transform: 'translateX(0)' }
-        ], { duration: 300 });
-        setMsg('ভুল কোড — আবার চেষ্টা করুন।');
-      }
-    }
+            if (enteredCode === CORRECT_CODE) {
+                // সঠিক কোড হলে
+                codeEntryScreen.style.display = 'none';
+                loginScreen.style.display = 'flex'; 
 
-    btn.addEventListener('click', tryUnlock);
-    codeInput.addEventListener('keydown', (e) => {
-      if(e.key === 'Enter') tryUnlock();
-    });
+            } else {
+                // ভুল কোড হলে, কাস্টম অ্যালার্ট দেখানো
+                showAlert("গোপন কোড ভুল! ভালোবাসা এখনো তালাবদ্ধ।");
+                document.getElementById('secret-code').value = '';
+            }
+        }
+    </script>
 
-    // accessibility: focus message on show
-    const obs = new MutationObserver(() => {
-      if(torso.classList.contains('open')){
-        codeInput.blur();
-      }
-    });
-    obs.observe(torso, { attributes:true, attributeFilter:['class'] });
-
-    // small parallax for charm
-    document.addEventListener('mousemove', (e) => {
-      const cx = window.innerWidth/2;
-      const cy = window.innerHeight/2;
-      const dx = (e.clientX - cx) / cx;
-      const dy = (e.clientY - cy) / cy;
-      const wrap = document.querySelector('.chest-wrap');
-      if(wrap) wrap.style.transform = `translateZ(0) rotateY(${dx*4}deg) rotateX(${dy*3}deg)`;
-    });
-
-    // initial hint
-    setMsg('কোড দিন (৪ সংখ্যার), উদাহরণ: 1234');
-  </script>
 </body>
 </html>
