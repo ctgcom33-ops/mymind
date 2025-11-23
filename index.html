@@ -3,176 +3,822 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>গোপন প্রবেশদ্বার</title>
+    <title>পণ্য এন্ট্রি ও তালিকা (চূড়ান্ত সংস্করণ)</title>
+    
     <style>
-        /* বেসিক স্টাইল (আগের মতোই) */
+        /* --- CSS কোড শুরু --- */
         body {
-            font-family: 'Segoe Script', 'Times New Roman', serif;
-            background-color: #ffe0e6;
-            background-image: linear-gradient(135deg, #ffe0e6 0%, #ffc3d4 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            color: #6a0531;
-            position: relative;
-            overflow: hidden;
-            perspective: 1000px;
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
         }
-
-        /* --- অ্যানিমেশন ইফেক্ট: ফুল ও হার্ট ঝরে পড়া --- */
-        .particles {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 0;
+        .main-content {
+            display: flex; 
+            gap: 20px;
+            max-width: 1200px;
+            margin: 20px auto;
         }
-        .particles::before {
-            content: "💖 🌸 🌹 ✨"; position: absolute; top: -10vh; left: 0; width: 100%; height: 100%; animation: fall 20s linear infinite; font-size: 20px; opacity: 0.8; white-space: pre-wrap; line-height: 60px;
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        @keyframes fall {
-            0% { transform: translateY(-50vh) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.8; }
-            100% { transform: translateY(150vh) rotate(360deg); opacity: 0.2; }
+        .form-container {
+            flex: 2; 
+            max-width: 600px;
         }
-
-        /* --- কাস্টম অ্যালার্ট স্টাইল (মাঝখানে নতুন সংযোজন) --- */
-        #custom-alert {
-            position: fixed;
-            top: 50%; /* মাঝখানে */
-            left: 50%; /* মাঝখানে */
-            transform: translate(-50%, -50%) scale(0.8); /* কেন্দ্রে আনা ও শুরুর আকার */
-            background-color: rgba(255, 102, 153, 0.98); /* গোলাপী অ্যালার্ট */
-            color: white;
-            padding: 25px 40px;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(209, 31, 98, 0.6);
-            font-size: 1.3em;
-            font-weight: bold;
-            text-align: center;
-            z-index: 100;
+        /* সারাংশ কন্টেইনার স্টাইল */
+        .summary-container {
+            flex: 1; 
+            max-width: 300px;
+            position: sticky; 
+            top: 20px;
+            align-self: flex-start;
+            border: 1px solid #ddd;
+            padding: 15px;
+            transition: opacity 0.5s ease; 
+        }
+        /* *গুরুত্বপূর্ণ:* এটি সারাংশ লুকানোর ক্লাসের স্টাইল */
+        .summary-container.hidden {
+            display: none !important; /* নিশ্চিতভাবে লুকানোর জন্য !important ব্যবহার করা হয়েছে */
             opacity: 0;
-            border: 3px solid white;
-            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-        }
-        .show-alert {
-            opacity: 1 !important;
-            /* হার্টের মতো স্পন্দিত হওয়ার অ্যানিমেশন শুরু */
-            animation: heartBeat 0.5s infinite alternate !important; 
-            transform: translate(-50%, -50%) scale(1) !important;
         }
         
-        @keyframes heartBeat {
-            0% { transform: translate(-50%, -50%) scale(1); }
-            100% { transform: translate(-50%, -50%) scale(1.05); } /* হালকা বড় হওয়া */
+        .summary-container.visible {
+            display: block !important;
+            opacity: 1;
+        }
+        
+        h2, h3 {
+            color: #343a40;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        /* প্রোগ্রেস বার স্টাইল */
+        .progress-container {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .progress-bar {
+            height: 15px;
+            background-color: #007bff;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.4s ease-in-out;
         }
 
-        /* --- প্রবেশদ্বার স্টাইল (প্রথম স্ক্রিন) --- */
-        #code-entry {
-            text-align: center; background: rgba(255, 255, 255, 0.95); padding: 50px 70px; border-radius: 25px; box-shadow: 0 15px 50px rgba(209, 31, 98, 0.4); border: 5px double #ff6699; z-index: 2; max-width: 350px; animation: pulse 2s infinite alternate;
+        .form-group {
+            margin-bottom: 15px;
+            display: none; 
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            position: relative;
         }
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 15px 50px rgba(209, 31, 98, 0.4); }
-            100% { transform: scale(1.03); box-shadow: 0 15px 60px rgba(209, 31, 98, 0.6); }
-        }
-        #code-entry h3 { color: #d11f62; font-size: 2.2em; margin-bottom: 25px; text-shadow: 1px 1px #fff; }
-        #secret-code { padding: 15px; width: 180px; text-align: center; font-size: 20px; letter-spacing: 5px; border: 3px solid #ff99aa; border-radius: 30px; margin-bottom: 25px; }
-        #code-button { padding: 12px 30px; background-color: #d11f62; color: white; border: none; border-radius: 30px; font-size: 1.2em; cursor: pointer; transition: all 0.3s; font-weight: bold; }
-        #message { display: none; }
-        
-        /* --- লগইন কন্টেইনার স্টাইল (দ্বিতীয় স্ক্রিন) --- */
-        #login-screen {
-            display: none; width: 100%; height: 100%; justify-content: center; align-items: center; position: absolute; top: 0; left: 0; transform-style: preserve-3d; transform-origin: left center; animation: openDoor 1.5s ease-out forwards; opacity: 0;
-        }
-        @keyframes openDoor {
-            0% { transform: rotateY(-90deg); opacity: 0; }
-            70% { transform: rotateY(5deg); opacity: 1; }
-            100% { transform: rotateY(0deg); opacity: 1; }
+        .form-group.active {
+            display: flex;
+            opacity: 1;
         }
         
-        /* হার্ট শেপ এবং ভেতরের কন্টেন্টের স্টাইল (সংক্ষিপ্ত করা হলো) */
-        .heart-wrapper { position: relative; width: 320px; height: 280px; z-index: 1; display: flex; justify-content: center; align-items: center; transform: translateY(15px); }
-        .login-container.heart-shape { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.95); border: 3px solid #ff6699; box-shadow: 0 10px 40px rgba(106, 5, 49, 0.4); backdrop-filter: blur(2px); transform: rotate(-45deg); border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-        .login-content { transform: rotate(45deg); width: 80%; text-align: center; box-sizing: border-box; padding: 10px; }
-        h2 { margin-bottom: 25px; color: #d11f62; font-size: 1.8em; text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7); }
-        .input-group { margin-bottom: 15px; text-align: left; }
-        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #8c0f48; font-size: 1em; }
-        .input-group input[type="text"], .input-group input[type="password"] { width: 90%; padding: 10px; border: 2px solid #ff99aa; border-radius: 20px; font-size: 14px; background-color: #fffafa; }
-        .login-btn { width: 100%; padding: 12px; background-color: #d11f62; color: white; border: none; border-radius: 20px; font-size: 1.1em; cursor: pointer; margin-top: 15px; }
-        .heart-icon { color: #d11f62; font-size: 1.5em; margin: 0 5px; }
+        .step-counter {
+            text-align: right;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6c757d;
+            margin-top: -10px;
+            margin-bottom: 5px;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .nav-btn {
+            flex-grow: 1;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .nav-btn.next-btn {
+            background-color: #28a745; 
+            color: white;
+        }
+        .nav-btn.back-btn {
+            background-color: #6c757d; 
+            color: white;
+        }
+        
+        .save-button-group .save-button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dashed #eee;
+            font-size: 14px;
+        }
+        .summary-item strong {
+            color: #343a40;
+        }
+        .summary-item .warning {
+            color: #ffc107;
+            font-style: italic;
+        }
+
+        /* --- ফিল্টার বাটন স্টাইল --- */
+        .filter-section {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            display: flex;
+            flex-wrap: wrap; 
+            gap: 8px; 
+            align-items: center;
+        }
+        .filter-section label {
+            font-weight: 600;
+            color: #343a40;
+            margin-right: 5px;
+        }
+        .filter-button {
+            padding: 8px 12px;
+            border: 1px solid #007bff;
+            background-color: white;
+            color: #007bff;
+            border-radius: 20px; 
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .filter-button.active {
+            background-color: #007bff; 
+            color: white;
+            border-color: #007bff;
+            font-weight: 600;
+        }
+        .filter-button:hover:not(.active) {
+            background-color: #e9ecef;
+        }
+        /* --- CSS কোড শেষ --- */
     </style>
 </head>
 <body>
 
-    <div class="particles"></div>
-
-    <div id="custom-alert"></div>
-
-    <div id="code-entry">
-        <h3><span class="heart-icon">💌</span> তোমার গোপন আমন্ত্রন</h3>
-        <input type="password" id="secret-code" placeholder="কোড দিন" maxlength="4">
-        <button id="code-button" onclick="checkCode()">হৃদয় খুলুন</button>
-        <p id="message"></p>
-    </div>
-
-    <div id="login-screen">
-        <div class="heart-wrapper">
-            <div class="login-container heart-shape">
-                <div class="login-content">
-                    <h2><span class="heart-icon">💖</span> চিরন্তন ভালোবাসায় <span class="heart-icon">💖</span></h2>
-                    
-                    <form action="#" method="POST">
-                        <div class="input-group">
-                            <label for="username">মনের মানুষ</label>
-                            <input type="text" id="username" name="username" placeholder="তার নাম..." required>
-                        </div>
-                        
-                        <div class="input-group">
-                            <label for="password">ভালোবাসার স্মৃতি</label>
-                            <input type="password" id="password" name="password" placeholder="আমাদের গোপন দিন..." required>
-                        </div>
-                        
-                        <button type="submit" class="login-btn">
-                            <span class="heart-icon" style="font-size: 1em; color: white;">💞</span> হৃদয় মেলে ধরো
-                        </button>
-                    </form>
-                    <p style="margin-top: 15px; font-size: 0.8em; color: #8c0f48; font-style: italic;">"প্রতিটি ধুকপুক তোমার জন্য।"</p>
+<div class="main-content">
+    
+    <div class="container form-container">
+        <h2>পণ্য এন্ট্রি ফর্ম 📝 (ধাপে ধাপে)</h2>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <form id="productEntryForm">
+            
+            <div class="form-group" data-step="1">
+                <div class="step-counter" id="stepCounter1"></div>
+                <label for="product_name">১. পণ্যের নাম: <span style="color:red;">*</span></label>
+                <input type="text" id="product_name" name="product_name" required oninput="updateSummary()">
+                <div class="navigation-buttons">
+                    <button type="button" class="nav-btn back-btn" disabled>← পূর্ববর্তী</button>
+                    <button type="button" class="nav-btn next-btn" onclick="checkRequiredFields(1)">পরবর্তী →</button>
                 </div>
             </div>
-        </div>
+
+            <div class="form-group" data-step="2">
+                <div class="step-counter" id="stepCounter2"></div>
+                <label for="category">২. ক্যাটাগরি: <span style="color:red;">*</span></label>
+                <select id="category" name="category" required onchange="handleCategoryChange(); updateSummary();">
+                    <option value="">নির্বাচন করুন</option>
+                    <option value="মুদি/খাবার">মুদি/খাবার</option>
+                    <option value="ইলেকট্রনিক্স">ইলেকট্রনিক্স</option>
+                    <option value="অন্যান্য">অন্যান্য (নাম লিখুন)</option>
+                </select>
+                
+                <div id="otherCategoryInput" style="margin-top: 10px; display: none;">
+                    <label for="custom_category">নতুন ক্যাটাগরির নাম:</label>
+                    <input type="text" id="custom_category" name="custom_category" placeholder="আপনার ক্যাটাগরির নাম লিখুন" oninput="updateSummary()">
+                </div>
+                
+                <div class="navigation-buttons">
+                    <button type="button" class="nav-btn back-btn" onclick="navigateForm(-1)">← পূর্ববর্তী</button>
+                    <button type="button" class="nav-btn next-btn" onclick="checkRequiredFields(1)">পরবর্তী →</button>
+                </div>
+            </div>
+
+            <div class="form-group" data-step="3">
+                <div class="step-counter" id="stepCounter3"></div>
+                <label for="unit_type">৩. একক: <span style="color:red;">*</span></label>
+                <select id="unit_type" name="unit_type" required onchange="updateSummary()">
+                    <option value="পিস">পিস (Piece)</option>
+                    <option value="কেজি">কেজি (KG)</option>
+                </select>
+                <div class="navigation-buttons">
+                    <button type="button" class="nav-btn back-btn" onclick="navigateForm(-1)">← পূর্ববর্তী</button>
+                    <button type="button" class="nav-btn next-btn" onclick="checkRequiredFields(1)">পরবর্তী →</button>
+                </diV>
+            </div>
+            
+            <div class="form-group" data-step="4">
+                <div class="step-counter" id="stepCounter4"></div>
+                <label for="total_quantity">৪. মোট পরিমাণ (কেজি/পিস): <span style="color:red;">*</span></label>
+                <input type="number" id="total_quantity" name="total_quantity" step="any" min="0" required oninput="updateSummary(); calculatePurchasePrice();">
+                <div class="navigation-buttons">
+                    <button type="button" class="nav-btn back-btn" onclick="navigateForm(-1)">← পূর্ববর্তী</button>
+                    <button type="button" class="nav-btn next-btn" onclick="checkRequiredFields(1)">পরবর্তী →</button>
+                </div>
+            </div>
+
+            <div class="form-group" data-step="5">
+                <div class="step-counter" id="stepCounter5"></div>
+                <label for="total_cost">৫. মোট ক্রয়মূল্য (টাকা): <span style="color:red;">*</span></label>
+                <input type="number" id="total_cost" name="total_cost" step="0.01" min="0" required oninput="updateSummary(); calculatePurchasePrice();">
+                <div class="navigation-buttons">
+                    <button type="button" class="nav-btn back-btn" onclick="navigateForm(-1)">← পূর্ববর্তী</button>
+                    <button type="button" class="nav-btn next-btn" onclick="checkRequiredFields(1)">পরবর্তী →</button>
+                </div>
+            </div>
+            
+            <div class="form-group" data-step="6">
+                <div class="step-counter" id="stepCounter6"></div>
+                <label for="expense">৬. অতিরিক্ত খরচ (পরিবহন, ইত্যাদি):</label>
+                <input type="number" id="expense" name="expense" step="0.01" value="0" oninput="updateSummary(); calculatePurchasePrice();">
+                <div class="navigation-buttons">
+                    <button type="button" class="nav-btn back-btn" onclick="navigateForm(-1)">← পূর্ববর্তী</button>
+                    <button type="button" class="nav-btn next-btn" onclick="checkRequiredFields(1)">পরবর্তী →</button>
+                </div>
+            </div>
+
+            <div class="form-group" data-step="7">
+                <div class="step-counter" id="stepCounter7"></div>
+                <label for="purchase_price_per_unit">৭. প্রতি একক ক্রয়মূল্য (স্বয়ংক্রিয়):</label>
+                <input type="text" id="purchase_price_per_unit" name="purchase_price_per_unit" readonly placeholder="মোট টাকা / পরিমাণ">
+                <div class="navigation-buttons">
+                    <button type="button" class="nav-btn back-btn" onclick="navigateForm(-1)">← পূর্ববর্তী</button>
+                    <button type="button" class="nav-btn next-btn" onclick="checkRequiredFields(1)">পরবর্তী →</button>
+                </div>
+            </div>
+            
+            <div class="form-group" data-step="8">
+                <div class="step-counter" id="stepCounter8"></div>
+                <label for="selling_price">৮. প্রতি একক বিক্রয়মূল্য (টাকা): <span style="color:red;">*</span></label>
+                <input type="number" id="selling_price" name="selling_price" step="0.01" min="0" required oninput="updateSummary()">
+                <div class="navigation-buttons">
+                    <button type="button" class="nav-btn back-btn" onclick="navigateForm(-1)">← পূর্ববর্তী</button>
+                    <button type="button" class="nav-btn next-btn" onclick="checkRequiredFields(1)">পরবর্তী →</button>
+                </div>
+            </div>
+
+            <div class="form-group" data-step="9">
+                <div class="step-counter" id="stepCounter9"></div>
+                <label for="expiry_date">৯. পণ্যের মেয়াদ (ঐচ্ছিক):</label>
+                <input type="date" id="expiry_date" name="expiry_date" onchange="updateSummary()">
+                <div class="navigation-buttons">
+                    <button type="button" class="nav-btn back-btn" onclick="navigateForm(-1)">← পূর্ববর্তী</button>
+                    <button type="button" class="nav-btn next-btn" onclick="checkRequiredFields(1)">পরবর্তী →</button>
+                </div>
+            </div>
+            
+            <div class="form-group" data-step="10">
+                <div class="step-counter" id="stepCounter10"></div>
+                <label for="company_name">১০. কোম্পানির নাম (ঐচ্ছিক):</label>
+                <input type="text" id="company_name" name="company_name" oninput="updateSummary()">
+                <div class="navigation-buttons">
+                    <button type="button" class="nav-btn back-btn" onclick="navigateForm(-1)">← পূর্ববর্তী</button>
+                    <button type="button" class="nav-btn next-btn" onclick="checkRequiredFields(1)">পরবর্তী →</button>
+                </div>
+            </div>
+            
+            <div class="form-group" data-step="11">
+                <div class="step-counter" id="stepCounter11"></div>
+                <label for="seller_name">১১. বিক্রেতার নাম (ঐচ্ছিক):</label>
+                <input type="text" id="seller_name" name="seller_name" oninput="updateSummary()">
+                <div class="navigation-buttons">
+                    <button type="button" class="nav-btn back-btn" onclick="navigateForm(-1)">← পূর্ববর্তী</button>
+                    <button type="button" class="nav-btn next-btn" onclick="checkRequiredFields(1)">পরবর্তী →</button>
+                </div>
+            </div>
+            
+            <div class="form-group" data-step="12">
+                <div class="step-counter" id="stepCounter12"></div>
+                <label for="seller_mobile">১২. বিক্রেতার মোবাইল নং (ঐচ্ছিক):</label>
+                <input type="text" id="seller_mobile" name="seller_mobile" oninput="updateSummary()">
+                <div class="navigation-buttons">
+                    <button type="button" class="nav-btn back-btn" onclick="navigateForm(-1)">← পূর্ববর্তী</button>
+                    <button type="button" class="nav-btn next-btn" onclick="document.querySelector('.save-button').click()">সাবমিট ও সেভ →</button>
+                </div>
+            </div>
+            
+            <div class="form-group save-button-group" data-step="13">
+                <div class="step-counter" id="stepCounter13"></div>
+                <button type="submit" class="save-button">
+                    সংরক্ষণ করুন ও তালিকা দেখুন ✅
+                </button>
+                <div class="navigation-buttons">
+                    <button type="button" class="nav-btn back-btn" onclick="navigateForm(-1)">← পূর্ববর্তী</button>
+                    <button type="button" class="nav-btn next-btn" disabled>সম্পূর্ণ হয়েছে</button>
+                </div>
+            </div>
+            
+        </form>
     </div>
 
-    <script>
-        const CORRECT_CODE = "1234";
+    <div class="container summary-container hidden" id="summaryContainer" style="display:none;">
+        <h3>এন্ট্রি সারাংশ 📋</h3>
+        <div id="entrySummary">
+            <p style="color: #6c757d; font-style: italic;">ধাপে ধাপে তথ্য পূরণ করুন, এখানে সারাংশ দেখা যাবে।</p>
+        </div>
+    </div>
+</div>
 
-        function showAlert(message) {
-            const alertElement = document.getElementById('custom-alert');
-            // অ্যালার্ট মেসেজে বড় করে একটি ভাঙা হার্টের ইমোজি যোগ করা হলো
-            alertElement.innerHTML = `<span style="font-size: 2em; display: block; margin-bottom: 10px;">💔</span> ${message}`;
-            alertElement.classList.add('show-alert');
+<div class="container list-container" id="productListContainer" style="margin-top: 30px;">
+    
+    <h3>সংরক্ষিত পণ্যের তালিকা 📋</h3>
 
-            // 3 সেকেন্ড পর অ্যালার্টটি লুকিয়ে ফেলা
-            setTimeout(() => {
-                // অ্যানিমেশন বন্ধ করে মসৃণভাবে অদৃশ্য হওয়া
-                alertElement.classList.remove('show-alert');
-            }, 3000);
+    <div class="filter-section">
+        <label>ক্যাটাগরি ফিল্টার:</label>
+        <div id="categoryFilterButtons">
+            </div>
+    </div>
+    
+    <div id="productTableContainer">
+        </div>
+</div>
+
+<script>
+    /* --- JavaScript কোড শুরু --- */
+    const form = document.getElementById('productEntryForm');
+    const productListContainer = document.getElementById('productTableContainer');
+    const progressBar = document.getElementById('progressBar');
+    const entrySummary = document.getElementById('entrySummary'); 
+    const summaryContainer = document.getElementById('summaryContainer'); 
+    const categoryFilterButtons = document.getElementById('categoryFilterButtons'); 
+    const otherCategoryInput = document.getElementById('otherCategoryInput'); // কাস্টম ক্যাটাগরি কন্টেইনার
+    
+    const formGroups = Array.from(form.querySelectorAll('.form-group'));
+    const totalSteps = formGroups.length;
+    const activeSteps = totalSteps - 1; 
+    let currentStep = 0; 
+    let activeFilter = 'all'; 
+
+    const fieldMap = {
+        'product_name': 'পণ্যের নাম',
+        'category': 'ক্যাটাগরি',
+        'unit_type': 'একক',
+        'total_quantity': 'মোট পরিমাণ',
+        'total_cost': 'মোট ক্রয়মূল্য',
+        'expense': 'অতিরিক্ত খরচ',
+        'purchase_price_per_unit': 'একক ক্রয়মূল্য',
+        'selling_price': 'একক বিক্রয়মূল্য',
+        'expiry_date': 'মেয়াদ',
+        'company_name': 'কোম্পানির নাম',
+        'seller_name': 'বিক্রেতার নাম',
+        'seller_mobile': 'বিক্রেতার মোবাইল'
+    };
+
+    // সারাংশ দৃশ্যমান করার ফাংশন
+    function showSummary() {
+        summaryContainer.classList.remove('hidden');
+        summaryContainer.classList.add('visible');
+        summaryContainer.style.display = 'block';
+    }
+    
+    // সারাংশ লুকানোর ফাংশন
+    function hideSummary() {
+        summaryContainer.classList.remove('visible');
+        summaryContainer.classList.add('hidden');
+        summaryContainer.style.display = 'none';
+    }
+    
+    // ক্যাটাগরি পরিবর্তন হলে "অন্যান্য" ইনপুট ফিল্ডটি দেখানো/লুকানো
+    window.handleCategoryChange = function() {
+        const categorySelect = document.getElementById('category');
+        const customCategoryInput = document.getElementById('custom_category');
+
+        if (categorySelect.value === 'অন্যান্য') {
+            otherCategoryInput.style.display = 'block';
+            customCategoryInput.setAttribute('required', 'required');
+            customCategoryInput.focus();
+        } else {
+            otherCategoryInput.style.display = 'none';
+            customCategoryInput.removeAttribute('required');
+            customCategoryInput.value = ''; // লুকানোর সময় নাম মুছে ফেলা
         }
+    }
 
-        function checkCode() {
-            const enteredCode = document.getElementById('secret-code').value;
-            const codeEntryScreen = document.getElementById('code-entry');
-            const loginScreen = document.getElementById('login-screen');
 
-            if (enteredCode === CORRECT_CODE) {
-                // সঠিক কোড হলে
-                codeEntryScreen.style.display = 'none';
-                loginScreen.style.display = 'flex'; 
-
+    // রিকোয়ার্ড ফিল্ড চেক করা এবং নেভিগেট করা
+    window.checkRequiredFields = function(direction) {
+        showSummary(); // সারাংশ দৃশ্যমান করা 
+        
+        const currentGroup = formGroups[currentStep];
+        const requiredInputs = currentGroup.querySelectorAll('[required]:not([readonly])');
+        let allValid = true;
+        
+        // *বিশেষ চেক: কাস্টম ক্যাটাগরি ফিল্ড চেক করা*
+        if (currentStep === 1 && document.getElementById('category').value === 'অন্যান্য') {
+            const customCategoryInput = document.getElementById('custom_category');
+            if (!customCategoryInput.value.trim()) {
+                allValid = false;
+                customCategoryInput.style.border = '2px solid red';
             } else {
-                // ভুল কোড হলে, কাস্টম অ্যালার্ট দেখানো
-                showAlert("গোপন কোড ভুল! ভালোবাসা এখনো তালাবদ্ধ।");
-                document.getElementById('secret-code').value = '';
+                customCategoryInput.style.border = '1px solid #ced4da';
             }
         }
-    </script>
+        
+        requiredInputs.forEach(input => {
+            if (!input.value || (input.tagName === 'SELECT' && input.value === "")) {
+                allValid = false;
+                input.style.border = '2px solid red';
+            } else {
+                input.style.border = '1px solid #ced4da';
+            }
+        });
+
+        if (allValid) {
+            navigateForm(direction);
+        } else {
+            alert('অনুগ্রহ করে * চিহ্নিত আবশ্যিক ক্ষেত্রটি পূরণ করুন।');
+            // কাস্টম ক্যাটাগরি ফিল্ড না পূরণ হলে সেখানে ফোকাস করা
+            if (currentStep === 1 && document.getElementById('category').value === 'অন্যান্য' && !document.getElementById('custom_category').value.trim()) {
+                 document.getElementById('custom_category').focus();
+            } else {
+                 currentGroup.querySelector('[required]:not([readonly])').focus();
+            }
+        }
+    }
+
+
+    window.updateSummary = function() {
+        showSummary(); // ইনপুট দেওয়ার সাথে সাথে সারাংশ দৃশ্যমান করা
+
+        let html = '';
+        const formData = new FormData(form);
+        const data = {};
+        for (const [key, value] of formData.entries()) {
+            data[key] = value;
+        }
+        
+        data['purchase_price_per_unit'] = document.getElementById('purchase_price_per_unit').value;
+        
+        // *সারাংশের জন্য ক্যাটাগরির মান আপডেট করা*
+        const customCategoryValue = document.getElementById('custom_category') ? document.getElementById('custom_category').value.trim() : '';
+        if (data['category'] === 'অন্যান্য' && customCategoryValue) {
+             data['category'] = customCategoryValue; 
+        }
+
+        for (const [id, label] of Object.entries(fieldMap)) {
+            let value = data[id] || '';
+            let unit = '';
+
+            if (id === 'total_quantity') {
+                unit = document.getElementById('unit_type').value;
+            } else if (id.includes('price') || id.includes('cost') || id.includes('expense')) {
+                unit = ' টাকা';
+            }
+            
+            const element = document.getElementById(id);
+            const isRequired = element ? element.hasAttribute('required') : false;
+            
+            let displayValue;
+            if (value && value !== '0') {
+                displayValue = `<span style="color: #007bff;">${value}${unit}</span>`;
+            } else if (isRequired) {
+                displayValue = `<span class="warning">আবশ্যিক, পূরণ করা হয়নি</span>`;
+            } else if (value === '0' || !value) {
+                displayValue = `<span class="warning">N/A</span>`;
+            }
+
+            html += `
+                <div class="summary-item">
+                    <strong>${label}:</strong>
+                    ${displayValue}
+                </div>
+            `;
+        }
+
+        entrySummary.innerHTML = html;
+    }
+
+
+    function updateProgress() {
+        const percentage = (currentStep / activeSteps) * 100; 
+        progressBar.style.width = Math.min(percentage, 100).toFixed(2) + '%';
+        
+        formGroups.forEach((group, index) => {
+            const stepNumber = index + 1;
+            const counterElement = group.querySelector('.step-counter');
+            if (counterElement) {
+                if (stepNumber <= activeSteps) {
+                    counterElement.textContent = `ধাপ ${stepNumber}/${activeSteps}`; 
+                } else {
+                    counterElement.textContent = 'ফিনিশ';
+                }
+            }
+        });
+    }
+
+    // নেক্সট/ব্যাক বাটন দ্বারা নেভিগেট করা
+    window.navigateForm = function(direction) {
+        showSummary(); // সারাংশ দৃশ্যমান করা 
+
+        formGroups[currentStep].classList.remove('active');
+
+        currentStep += direction;
+
+        if (currentStep < 0) {
+            currentStep = 0; 
+        } else if (currentStep >= totalSteps) {
+            currentStep = totalSteps - 1; 
+        }
+        
+        formGroups[currentStep].classList.add('active');
+
+        const currentInput = formGroups[currentStep].querySelector('input:not([readonly]), select, .save-button');
+        if (currentInput) {
+            currentInput.focus();
+        }
+        
+        if (currentInput && ['total_quantity', 'total_cost', 'expense'].includes(currentInput.id)) {
+             calculatePurchasePrice();
+        }
+        
+        updateSummary(); 
+        updateProgress();
+    }
+
+    // Enter চাপলে নেভিগেট করা
+    function setupSequentialNavigation() {
+        const allInputs = Array.from(form.querySelectorAll('input:not([type="submit"]), select'));
+        
+        allInputs.forEach((input) => {
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    
+                    const inputGroup = input.closest('.form-group');
+                    const groupIndex = formGroups.indexOf(inputGroup);
+
+                    if (input.hasAttribute('readonly')) {
+                         navigateForm(1);
+                         return;
+                    }
+                    
+                    if (groupIndex === totalSteps - 2) { 
+                        document.querySelector('.save-button').click();
+                    } else if (groupIndex !== -1 && groupIndex < totalSteps - 1) {
+                        checkRequiredFields(1); 
+                    }
+                }
+            });
+        });
+
+        if (totalSteps > 0) {
+            formGroups[0].classList.add('active');
+            document.getElementById('product_name').focus();
+        }
+        updateProgress();
+        updateSummary(); 
+    }
+
+    // প্রতি একক ক্রয়মূল্য গণনা
+    function calculatePurchasePrice() {
+        const totalQuantity = document.getElementById('total_quantity');
+        const totalCost = document.getElementById('total_cost');
+        const expense = document.getElementById('expense');
+        const purchasePricePerUnit = document.getElementById('purchase_price_per_unit');
+
+        const quantity = parseFloat(totalQuantity.value) || 0;
+        const cost = parseFloat(totalCost.value) || 0;
+        const extraExpense = parseFloat(expense.value) || 0;
+        
+        if (quantity > 0) {
+            const totalAmount = cost + extraExpense;
+            const pricePerUnit = totalAmount / quantity;
+            purchasePricePerUnit.value = pricePerUnit.toFixed(2);
+        } else {
+            purchasePricePerUnit.value = 'পরিমাণ ০ বা খালি';
+        }
+        updateSummary();
+    }
+
+    function getProducts() {
+        return JSON.parse(localStorage.getItem('products')) || [];
+    }
+    
+    // ক্যাটাগরি ফিল্টার বাটন তৈরি করা 
+    function populateCategoryFilter() {
+        const products = getProducts();
+        const categories = new Set(products.map(p => p.category).filter(c => c)); 
+        
+        categoryFilterButtons.innerHTML = '';
+        
+        // ১. সকল ক্যাটাগরি বাটন
+        const allButton = document.createElement('button');
+        allButton.textContent = 'সকল ক্যাটাগরি';
+        allButton.classList.add('filter-button');
+        allButton.setAttribute('data-category', 'all');
+        allButton.classList.toggle('active', activeFilter === 'all');
+        allButton.onclick = () => setFilter('all');
+        categoryFilterButtons.appendChild(allButton);
+
+        // ২. স্বতন্ত্র ক্যাটাগরি বাটন
+        categories.forEach(category => {
+            const button = document.createElement('button');
+            button.textContent = category;
+            button.classList.add('filter-button');
+            button.setAttribute('data-category', category);
+            button.classList.toggle('active', activeFilter === category);
+            button.onclick = () => setFilter(category);
+            categoryFilterButtons.appendChild(button);
+        });
+    }
+    
+    // ফিল্টার সেট করা এবং তালিকা আপডেট করা 
+    window.setFilter = function(category) {
+        activeFilter = category;
+        // সকল বাটন থেকে active ক্লাস সরিয়ে ফেলা
+        document.querySelectorAll('.filter-button').forEach(btn => btn.classList.remove('active'));
+        // বর্তমান বাটনে active ক্লাস যোগ করা
+        document.querySelector(`.filter-button[data-category="${category}"]`).classList.add('active');
+        
+        displayProductList(getProducts());
+    }
+
+
+    window.deleteProduct = function(idToDelete, productName) {
+        
+        const confirmationText = prompt(`নিশ্চিত করার জন্য "${productName}" নামটি হুবহু নিচে লিখুন:`);
+
+        if (confirmationText === null || confirmationText.trim() !== productName.trim()) {
+            if (confirmationText !== null) {
+                alert(`দুঃখিত, লেখা নামটি ("${confirmationText}") পণ্যের নামের সাথে ("${productName}") মেলেনি। ডিলিট করা সম্ভব হলো না।`);
+            }
+            return;
+        }
+
+        let products = getProducts();
+        products = products.filter(p => p.id !== idToDelete);
+        localStorage.setItem('products', JSON.stringify(products));
+        
+        populateCategoryFilter(); 
+        displayProductList(products); 
+        alert(`পণ্য "${productName}" সফলভাবে মুছে ফেলা হয়েছে।`);
+    }
+
+    form.addEventListener('submit', function(event) {
+        event.preventDefault(); 
+        calculatePurchasePrice(); 
+        
+        if (isNaN(parseFloat(document.getElementById('purchase_price_per_unit').value))) {
+            alert('মোট পরিমাণ ও মূল্য সঠিকভাবে পূরণ করুন।');
+            return;
+        }
+        
+        // *ফাইনাল ক্যাটাগরি মান নির্ধারণ করা*
+        let finalCategory = document.getElementById('category').value;
+        const customCategoryInput = document.getElementById('custom_category');
+        const customCategoryValue = customCategoryInput.value.trim();
+        
+        if (finalCategory === 'অন্যান্য' && customCategoryValue) {
+            finalCategory = customCategoryValue;
+        } else if (finalCategory === 'অন্যান্য' && !customCategoryValue) {
+            alert('অনুগ্রহ করে কাস্টম ক্যাটাগরির নামটি পূরণ করুন।');
+            customCategoryInput.focus();
+            return;
+        }
+
+        const newProduct = {
+            id: Date.now(), 
+            name: document.getElementById('product_name').value,
+            category: finalCategory, // চূড়ান্ত ক্যাটাগরি মান
+            unit: document.getElementById('unit_type').value,
+            quantity: parseFloat(document.getElementById('total_quantity').value),
+            totalCost: parseFloat(document.getElementById('total_cost').value),
+            expense: parseFloat(document.getElementById('expense').value) || 0,
+            purchasePricePerUnit: parseFloat(document.getElementById('purchase_price_per_unit').value),
+            sellingPrice: parseFloat(document.getElementById('selling_price').value),
+            expiry: document.getElementById('expiry_date').value,
+            company: document.getElementById('company_name').value,
+            seller: document.getElementById('seller_name').value,
+            mobile: document.getElementById('seller_mobile').value
+        };
+
+        const products = getProducts();
+        products.push(newProduct);
+        localStorage.setItem('products', JSON.stringify(products));
+
+        populateCategoryFilter(); 
+        displayProductList(products);
+        
+        // সফলভাবে সেভ হওয়ার পর সারাংশ লুকিয়ে ফেলা নিশ্চিত করা
+        hideSummary();
+
+        form.reset();
+        document.getElementById('purchase_price_per_unit').value = '';
+        
+        // কাস্টম ক্যাটাগরি ইনপুট লুকানো ও রিসেট করা
+        otherCategoryInput.style.display = 'none'; 
+        customCategoryInput.value = '';
+
+        alert('পণ্য সফলভাবে সংরক্ষণ করা হয়েছে!');
+        
+        formGroups.forEach(group => group.classList.remove('active'));
+        currentStep = 0; 
+        formGroups[currentStep].classList.add('active');
+        document.getElementById('product_name').focus();
+        updateProgress();
+        
+        updateSummary(); 
+    });
+
+    // পণ্যের তালিকা প্রদর্শন 
+    function displayProductList(products = getProducts()) {
+        
+        const selectedCategory = activeFilter;
+        
+        // ফিল্টারিং
+        const filteredProducts = selectedCategory === 'all' 
+            ? products 
+            : products.filter(p => p.category === selectedCategory);
+            
+        productListContainer.innerHTML = '';
+
+        if (filteredProducts.length === 0) {
+            productListContainer.innerHTML = `<p style="padding: 10px; border: 1px dashed #dc3545;">
+                ${selectedCategory === 'all' ? 'এখনও কোনো পণ্য যোগ করা হয়নি।' : `"${selectedCategory}" ক্যাটাগরিতে কোনো পণ্য নেই।`}
+            </p>`;
+            return;
+        }
+
+        let html = '<table>';
+        html += '<thead><tr><th>পণ্যের নাম</th><th>পরিমাণ</th><th>ক্রয়মূল্য (একক)</th><th>বিক্রয়মূল্য (একক)</th><th>মেয়াদ</th><th>ডিলিট</th></tr></thead>';
+        html += '<tbody>';
+
+        filteredProducts.forEach(p => {
+            html += `<tr>
+                <td>${p.name}</td>
+                <td>${p.quantity} ${p.unit}</td>
+                <td>${p.purchasePricePerUnit ? p.purchasePricePerUnit.toFixed(2) : 'N/A'} টাকা</td>
+                <td>${p.sellingPrice ? p.sellingPrice.toFixed(2) : 'N/A'} টাকা</td>
+                <td>${p.expiry || 'N/A'}</td>
+                <td><button class="delete-btn" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g, "\\'")}')">মুছে ফেলুন</button></td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        productListContainer.innerHTML = html;
+    }
+
+    // পেজ লোড হওয়ার সময় সব সেটআপ করা
+    window.onload = function() {
+        // লোড হওয়ার সাথে সাথেই সারাংশ লুকিয়ে ফেলা নিশ্চিত করা
+        hideSummary();
+        
+        populateCategoryFilter();
+        displayProductList();
+        setupSequentialNavigation();
+        handleCategoryChange(); // লোডের সময় কাস্টম ইনপুট লুকানো নিশ্চিত করা
+    };
+    /* --- JavaScript কোড শেষ --- */
+</script>
 
 </body>
 </html>
